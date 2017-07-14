@@ -1,0 +1,87 @@
+#!/usr/bin/perl
+
+=pod
+
+USAGE:
+	Trinity_length_distribution.pl Trinity.fasta [Trinity.fasta.transdecoder.pep]
+	
+OUTPUT:
+	gene.txt transcript.txt [ORF.txt]
+
+=cut
+
+die `pod2text $0` unless (@ARGV==1 or @ARGV==2);
+local $/="\n>";
+my %gene;
+my %transcript;
+my $L=0;
+my $G=0;
+open IN,"<$ARGV[0]" or die $!;
+while(<IN>){
+	chomp;
+	s/^>//;
+	my @F=split /\n/,$_,2;
+	$F[1]=~s/\n//g;
+	my $l=length $F[1];
+	my $tmp=int($l/100)*100;
+	$tmp >=2000 ? $transcript{2000}++ : $transcript{$tmp}++;
+	
+	$F[0]=~/(c\d+\_g\d+)\_i\d+/;
+	if($1 eq $G){
+		$L=$l if($L<$l);
+	}elsif($G eq '0'){
+		$G=$1;
+		$L=$l;
+	}else{
+		$tmp= int($L/100)*100;
+		$tmp >=2000 ? $gene{2000}++ :$gene{$tmp}++;
+		$G=$1;
+		$L=$l;
+	}
+}
+close IN;
+
+
+(int($L/100)*100)>=2000 ? $gene{2000}++ : $gene{int($L/100)*100}++;
+
+
+for (keys %gene){
+	print "$_\t$gene{$_}\n";
+}
+open OUT,">gene.txt" or die $!;
+for (my $i=0;$i<=2000;$i+=100){
+	$gene{$i}=0 unless(exists $gene{$i});
+	print OUT "$i\t$gene{$i}\n" ;
+}
+close OUT;
+open OUT,">transcript.txt" or die $!;
+for (my $i=0;$i<=2000;$i+=100){
+	$transcript{$i}=0 unless (exists $transcript{$i});
+	print OUT "$i\t$transcript{$i}\n" ;
+}
+close OUT;
+
+exit(0)  unless($ARGV[1]);
+open IN,"<$ARGV[1]" or die $!;
+my %orf;
+while(<IN>){
+	chomp;
+	s/^>//;
+	my @F=split /\n/,$_,2;
+	$F[1]=~s/\n//g;
+	my $l=length $F[1];
+	my $tmp=int($l/100)*100;
+	$tmp >=2000 ? $orf{2000}++ : $orf{$tmp}++;
+}
+close IN;
+open OUT,">ORF.txt" or die $!;
+for (my $i=0;$i<=2000;$i+=100){
+	$orf{$i}=0 unless (exists $orf{$i});
+	print OUT "$i\t$orf{$i}\n" ;
+}
+close OUT;
+
+
+
+
+
