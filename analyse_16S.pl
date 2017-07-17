@@ -166,8 +166,10 @@ sub otu{
 	my $input= $opts{I} ? 'otus/otu_table_mc2_w_tax.biom' : 'otus/otu_table_mc2_w_tax_no_pynast_failures.biom';
 	system "sort_otu_table.py -i  $input -o otus/otu_table.biom -l $map -s SampleID";
 	system "biom summarize-table -i otus/otu_table.biom -o otus/otu_summary.txt";
+	system "biom summarize-table -i otus/otu_table.biom -o otus/otu_count.txt  --qualitative";
 	system "biom convert --header-key taxonomy --to-tsv -i otus/otu_table.biom -o otus/otu_table.txt ";
 	system "txt_to_excel.pl -f  -s tab -r 2 -o 2.otu_table.xlsx otus/otu_table.txt";
+	system "rm -rf taxa_plots*";
 	system "summarize_taxa_through_plots.py -i otus/otu_table.biom -o taxa_plots/  -p $opts{p} -m $map ";
 	system "summarize_taxa_through_plots.py -i otus/otu_table.biom -o taxa_plots_Treatment  -p $opts{p} -m $map -c Treatment";
 	system "txt_to_excel.pl -s tab -f -r 2 -o 3.taxonomy.xlsx -n 'Phylum,Class,Order,Family,Genus,Species' taxa_plots/*_L?.txt ";
@@ -233,6 +235,7 @@ sub alpha{
 	my ($max,$step,$min,$group,$ref1,$ref2)=@_;
 	my @samples=@{$ref1};
 	my @groups=@{$ref2};
+	system "rm -rf rare/  alpha_diversity/  alpha_curves/";
 	if($opts{f}){
 		system "parallel_multiple_rarefactions.py -i otus/otu_table.biom -m 50 -x $max -s 50 -n 3 -o rare  -O $opts{O}";
 	}else{
@@ -301,6 +304,7 @@ sub alpha{
 sub beta{
 	my ($map,$min,$sample_num)=@_;
 	return if $sample_num <3;
+	system "rm -rf cdout";
 	if($opts{I}){
 		system "core_diversity_analyses.py -i otus/otu_table.biom -o cdout -m $map -e $min -a -O $opts{O} --suppress_taxa_summary --suppress_alpha_diversity -p $opts{p} -c Treatment  --nonphylogenetic_diversity "; 
 		system "make_2d_plots.py -i cdout/bdiv_even$min/bray_curtis_pc.txt -m $map -o cdout/bdiv_even$min/bray_curtis_2d_pcoa_plots/ --colorby SampleID,Treatment ";
@@ -331,6 +335,7 @@ sub upload{
 	system "ln -s -f -r seq_number.png upload/1.sequence_stat/";
 	system "ln -s -f -r 2.otu_table.xlsx  upload/2.otu_table/";
 	system "ln -s -f -r otus/otu_summary.txt  upload/2.otu_table/";
+	system "ln -s -f -r otus/otu_count.txt  upload/2.otu_table/";
 	system "ln -s -f -r otus/rep_set.fna  upload/2.otu_table/";
 	system "ln -s -f -r venn/*.png  upload/2.otu_table/";
 	system "ln -s -f -r 3.taxonomy*xlsx upload/3.taxonomy/";
