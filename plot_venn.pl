@@ -11,6 +11,8 @@ USAGE: plot_venn.pl  [opt]  class1.txt ... class5.txt
 
 -s --suffix		default :  txt
 
+-m --mode 		can be 0:raw , 1:percent, 2: raw+percent  default : 0
+
 -t --type		default : png
 
 -d --dist		default : 0.07
@@ -24,12 +26,14 @@ my %opts=(
 	s => 'txt',
 	t => 'png',
 	d => 0.07,
+	m => 0,
 );
 GetOptions(\%opts,
 	"o|output=s",
 	"s|suffix=s",
 	"t|type=s",
 	"d|dist=f",
+	"m|mode=i",
 	"h|help",
 );
 die `pod2text $0` if(@ARGV<2 or @ARGV>5 or $opts{h} );
@@ -37,6 +41,8 @@ my $count=@ARGV;
 my @name;
 my $name_str;
 my $dat_str;
+my $mode = $opts{m}==0 ? "'raw'" : $opts{m}==1 ? "'percent'" : $opts{m}==2 ? "c('raw','percent')" : '';
+die `pod2text $0` unless $mode;
 
 
 open OUT,">__$$.R" or die $!;
@@ -50,7 +56,7 @@ EOF
 for my $i(1 .. $count){
 	my $tmp=$ARGV[$i-1];
 	my $base=basename($tmp,".$opts{s}");
-        print OUT "da$i=read.csv(\"$tmp\",sep=\"\\t\")\n";
+        print OUT "da$i=read.csv(\"$tmp\",sep=\"\\t\",header=F)\n";
         $dat_str.= $dat_str ? ",da$i\[,1]" : "da$i\[,1]";
 	push @name,$base;
 }
@@ -67,11 +73,13 @@ T=venn.diagram(
 	cat.dist=$opts{d},
 	rotation.degree=0,
 	imagetype='$opts{t}',
+	print.mode= $mode,
+	direct.area=F,
 )
 #grid.draw(T)
 #dev.off()
 EOF
 
-system "/usr/bin/Rscript __$$.R";
+system "Rscript __$$.R";
 
 unlink "__$$.R";
