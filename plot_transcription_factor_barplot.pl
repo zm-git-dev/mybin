@@ -9,16 +9,21 @@ USAGE:
 
 -f --fasta     Trinity.fasta
 
+-p --prefix	output prefix   [ TF ]
+
 -h --help
 	
-OUTPUT:  TF_count.txt , TF.pdf
+OUTPUT:   prefix.txt prefix.pdf
 
 =cut
 
-my %opts;
+my %opts=(
+	p => 'TF',
+);
 GetOptions(\%opts,
 	"f|fasta=s",
 	"h|help",
+	"p|prefix",
 );
 
 die `pod2text $0` unless @ARGV;
@@ -41,10 +46,11 @@ if($opts{f}){
 }
 
 open IN,"<$ARGV[0]" or die $!;
-open OUT,">TF_count.txt" or die $!;
+open OUT,">$opts{p}.txt" or die $!;
 my %hash;
 while(<IN>){
 	chomp;
+	next if /^\s*$/;
 	my @F=split /\t/;
 	$F[0]=~/((c\d+\_g\d+)\_i\d+)/;
 	next if ($opts{f}  and $unigene{$2}{unigene} ne $1);
@@ -69,14 +75,15 @@ close OUT;
 open OUT,">__$$.R" or die $!;
 print OUT <<EOF;
 library("ggplot2")
-dat=read.csv("TF_count.txt",sep="\\t",header=T)
+dat=read.csv("$opts{p}.txt",sep="\\t",header=T)
 dat\$TF= factor(dat\$TF,levels=rev(dat\$TF)) 
 m=max(dat\$Count)
-pdf("TF.pdf")
+pdf("$opts{p}.pdf")
 ggplot(data=dat,aes(x=TF,y=Count,label=Count))+
 	geom_bar(stat="identity",aes(fill=TF))+
 	coord_flip()+
 	geom_text(nudge_y=0.05*m,size=2)+
+	theme_bw()+
 	labs(x="Transcription Factor",y="Count",fill="")+
 	theme(legend.position="none")
 
