@@ -52,10 +52,9 @@ while(<IN>){
 close IN;
 
 for my $f(@ARGV){
-	open IN,"<$f" or die $!;
-	
-	(my $file=$f)=~s/(\.\w+)$/\_add_OMIM$1/;
-	open OUT,">$file" or die $!;
+	system "mv $f $f.tmp";
+	open IN,"<$f.tmp" or die $!;
+	open OUT,">$f" or die $!;
 	my ($gene_index,$position_index);
 	while(<IN>){
 		chomp;
