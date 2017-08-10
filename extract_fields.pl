@@ -9,7 +9,8 @@ while(<>){
 	next if /^#/;
 	chomp;
 	my @F=split /\t/;
-	next if length $F[3] >1 or length $F[4] >1;
+	next if length $F[3] >1 ;
+	next if length ( ( split /,/,$F[4])[0] ) > 1;
 	my @dp = split /\:/,$F[9];
 	$dp[0] = $dp[0] eq '0/1' ? 'Het' : 'Hom';
 	my @ad = split /,/,$dp[-1];
