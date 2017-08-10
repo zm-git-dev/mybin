@@ -53,14 +53,14 @@ system "java  -Xmx$opts{m}G  -jar $Snpsift dbNSFP -db $db  -f $fields1 \$f | ext
 PL
 
 
-#system "my_threads.pl -n $sample_num  'perl __$$.pl ' @ARGV ";
-#system "rm __$$.pl";
+system "my_threads.pl -n $sample_num  'perl __$$.pl ' @ARGV ";
+system "rm __$$.pl";
 
 ## merge samples ##
 
 my @annot_files = map{ s/vcf$/annot\.txt/;$_ } @ARGV;
 my $multi = $opts{u} ? '-m' : '';
-system "merge_vcf.pl -p 1:4 -c 5:10   -t 11:49 -e -s '.annot.txt' -$multi  -o merge  @annot_files ";
+system "merge_vcf.pl -p 1:4 -c 5:8   -t 9:49 -e -s '.annot.txt' -$multi  -o merge  @annot_files ";
 
 ## add Omim annotation ##
 
